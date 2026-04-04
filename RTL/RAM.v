@@ -1,5 +1,5 @@
 module RAM(
-    input clk, rst,
+    input clk, rst_n,
     input [9:0] din,
     input rx_valid,
     output reg [9:0] dout,
@@ -8,8 +8,8 @@ module RAM(
     parameter MEM_DEPTH = 256, ADDR_SIZE = 8;
     reg [7:0] mem [0:MEM_DEPTH-1];
     reg [ADDR_SIZE-1:0] wr_addr, rd_addr;
-    always @(posedge clk or posedge rst) begin
-        if(rst) begin
+    always @(posedge clk or negedge rst_n) begin
+        if(rst_n) begin
             dout<=0;
             tx_valid<=0;
             wr_addr <= 0; rd_addr <= 0;
