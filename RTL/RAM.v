@@ -9,7 +9,7 @@ module RAM(
     reg [7:0] mem [0:MEM_DEPTH-1];
     reg [ADDR_SIZE-1:0] wr_addr, rd_addr;
     always @(posedge clk or negedge rst_n) begin
-        if(rst_n) begin
+        if(!rst_n) begin
             dout<=0;
             tx_valid<=0;
             wr_addr <= 0; rd_addr <= 0;

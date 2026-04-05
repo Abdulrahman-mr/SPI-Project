@@ -1,6 +1,4 @@
-
-module SPI_SLAVE ( clk, rst_n, SS_n, MISO , MOSI , rx_valid , rx_data , tx_valid , tx_data );
-
+module SPI_SLAVE (clk, rst_n, SS_n, MISO, MOSI, rx_valid, rx_data, tx_valid, tx_data);
 /******************************************Signal Ports********************************************************/
    /******************************* States Parameter **********************************************/
     parameter IDLE = 3'b000;
@@ -11,7 +9,7 @@ module SPI_SLAVE ( clk, rst_n, SS_n, MISO , MOSI , rx_valid , rx_data , tx_valid
 
    /******************************* input_&_output ports**********************************************/
     input clk , rst_n , SS_n , MOSI , tx_valid  ;
-    input [9:0] tx_data ;
+    input [9:0] tx_data;
     output reg rx_valid , MISO ;
     output reg [9:0] rx_data ;
 
@@ -23,32 +21,25 @@ module SPI_SLAVE ( clk, rst_n, SS_n, MISO , MOSI , rx_valid , rx_data , tx_valid
 
 /******************************************State Memory********************************************************/
     always @(posedge clk) begin
-        if (!rst_n) begin 
-            current_state <= IDLE; read_ready <= 0;
-             end
-        else
-         current_state <= next_state;
+        if (!rst_n) current_state <= IDLE;
+        else current_state <= next_state;
     end
-
 /******************************************Next State Logic****************************************************/ 
     always @(*) begin
         case (current_state)
             IDLE: next_state = (SS_n)? IDLE : CHK_CMD;
             CHK_CMD: next_state = (SS_n)? IDLE : (MOSI ==0)? WRITE: (read_ready)? READ_DATA : READ_ADD;                     
-            READ_ADD: begin next_state = (SS_n)? IDLE : READ_ADD; read_ready = 1; end
-            READ_DATA: begin next_state = (SS_n)? IDLE : READ_DATA; read_ready = 0; end
+            READ_ADD:  next_state = (SS_n)? IDLE : READ_ADD;
+            READ_DATA:  next_state = (SS_n)? IDLE : READ_DATA;
             WRITE: next_state = (SS_n)? IDLE : WRITE;
             default: next_state = IDLE;
         endcase
     end
-
-/******************************************Output Logic********************************************************/   
-    always @(posedge clk) begin
+/******************************************Output Logic********************************************************/       always @(posedge clk) begin
         if(!rst_n) begin
             MISO <= 0 ; rx_valid <= 0 ; rx_data <= 0 ; 
             read_ready <= 0 ; Counter <= 0 ; data_reg <= 0 ;
         end
-
         else begin
          case (current_state)
             IDLE : rx_valid <= 0 ;
@@ -72,18 +63,19 @@ module SPI_SLAVE ( clk, rst_n, SS_n, MISO , MOSI , rx_valid , rx_data , tx_valid
                   Counter <= Counter -1 ;
                 end   
                     else begin 
-                      read_ready <= 1 ;     
+                      read_ready <= 1;
+                      rx_valid <= 1 ;
+                      rx_data <= data_reg ;      
                     end                     
                 end    
 
             READ_DATA : begin 
                 if (tx_valid == 1) begin
                     rx_valid <= 0 ;
-                  
                     if (Counter == 0) begin
                         read_ready <= 0 ;
                     end  
-                        else begin
+                    else begin
                             MISO <= tx_data [Counter-1] ;
                             Counter <= Counter - 1 ;      
                          end
@@ -97,11 +89,9 @@ module SPI_SLAVE ( clk, rst_n, SS_n, MISO , MOSI , rx_valid , rx_data , tx_valid
                         rx_valid <= 1 ;
                         rx_data <= data_reg ;  
                         Counter <= 10 ;                     
-
                          end  
                     end   
-             end  
-
+             end 
              endcase   
         end
  end           
